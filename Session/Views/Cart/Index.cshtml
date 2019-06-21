@@ -1,0 +1,116 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row" style="margin-top:50px">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <div class="col-lg-12">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Product ID</th>
+                            <th>Product Name</th>
+                            <th>Price</th>
+                            <th>Unit In Stock</th>
+                            <th>Quantity</th>
+                            <th>Total Price</th>
+                            <th>Process</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div class="col-lg-6 col-lg-offset-6">
+            <label>
+                Ödemeniz Gereken Toplam Tutar:<span id="totalCount"></span>
+            </label>
+        </div>
+    </div>
+</div>
+
+<script src="~/Scripts/jquery-3.0.0.js"></script>
+
+<script type="text/javascript">
+
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+    });
+
+
+    $(document).ready(function () {
+
+        setTimeout(function () {
+            $.Cart.List()
+        }, 500)
+
+        $.Cart = {
+            List: function () {
+                $.getJSON("http://localhost:17662/Cart/List", function (data) {
+                    $("table tbody tr").remove();
+                    var count = Object.keys(data).length;
+                    var totalCount = 0;
+                    if (count > 0) {
+                        $.each(data, function (key, item) {
+                            $("table tbody").append("<tr><td style='line-height:40px;'>"
+                                + item.Id + "</td><td style='line-height:40px;'>"
+                                + item.ProductName + "</td><td style='line-height:40px;'>"
+                                + item.UnitPrice + "</td><td style='line-height:40px;'>"
+                                + item.UnitsInStock + "</td><td style='line-height:40px;'>"
+                                + item.Quantity + "</td><td style='line-height:40px;'>"
+                                + (item.Quantity * item.UnitPrice) + "</td><td style='line-height:40px;'><img width='40' height='40' onclick='$.Cart.Increase(" + item.Id + ")' src='/Content/Images/Add.png' data-toggle='tooltip' data-placement='right' title='Arttır' /><img width='40' height='40' onclick='$.Cart.Decrease("+ item.Id + ")' src='/Content/Images/Remove.png' data-toggle='tooltip' data-placement='right' title='Azalt' /><img width='40' height='40' onclick='$.Cart.Remove(" + item.Id + ")' src='/Content/Images/Remove1.png' data-toggle='tooltip' data-placement='right' title='Sil' /></td></tr>")
+                            totalCount += (item.Quantity * item.UnitPrice);
+                        });
+                    }
+                    $("#totalCount").html(totalCount);
+                });
+            },
+            Increase: function (Id) {
+                $.ajax({
+                    type: "POST",
+                    dataType: "Json",
+                    url: "@Url.Action("IncreaseCart","Cart")/" + Id,
+                    success: function (data) {
+                        $.Cart.List();
+                    }
+                })
+            },
+            Decrease: function (Id) {
+                $.ajax({
+                    type: "POST",
+                    dataType: "Json",
+                    url: "@Url.Action("DecreaseCart","Cart")/" + Id,
+                    success: function (data) {
+                        $.Cart.List();
+                    }
+                })
+            },
+            Remove: function (Id) {
+                $.ajax({
+                    type: "POST",
+                    dataType: "Json",
+                    url: "@Url.Action("RemoveCart","Cart")/" + Id,
+                    success: function (data) {
+                        $.Cart.List();
+                    }
+                })
+            },
+
+        }
+
+
+    });
+
+</script>
+<style type="text/css">
+
+    img:hover {
+        cursor: pointer !important;
+    }
+</style>
